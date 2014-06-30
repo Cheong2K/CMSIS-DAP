@@ -581,16 +581,17 @@ static void initDisconnect(uint8_t success) {
     int autorst = 0;
 #endif
     drag_success = success;
-    if (autorst)
+    if (autorst && success)
         swd_set_target_state(RESET_RUN);
     main_blink_msd_led(0);
     init(1);
     isr_evt_set(MSC_TIMEOUT_STOP_EVENT, msc_valid_file_timeout_task_id);
-    if (!autorst)
-    {
+//    if (!autorst)
+//    {
         // event to disconnect the usb
-        main_usb_disconnect_event();
-    }
+//        main_usb_disconnect_event();
+//    }
+		main_usb_disconnect_event();
     semihost_enable();
 }
 
@@ -983,9 +984,13 @@ void usbd_msc_write_sect (uint32_t block, uint8_t *buf, uint32_t num_of_blocks) 
             if (maybe_erase && (block == theoretical_start_sector)) {
                 // avoid erasing the internal flash if only the external flash will be updated
                 if (flash_addr_offset == 0) {
-                    if (!target_flash_erase_chip()) {
-                    return;
-                    }
+#ifndef DBG_NRF51822
+                     if (!target_flash_erase_chip()) {
+                         reason = SWD_ERROR;
+                         initDisconnect(0);
+                         return;
+                     }
+#endif
                 }
                 maybe_erase = 0;
                 program_page_error = 0;
@@ -1026,9 +1031,13 @@ void usbd_msc_write_sect (uint32_t block, uint8_t *buf, uint32_t num_of_blocks) 
             if (flash_started && (block == theoretical_start_sector)) {
                 // avoid erasing the internal flash if only the external flash will be updated
                 if (flash_addr_offset == 0) {
-                    if (!target_flash_erase_chip()) {
-                    return;
-                    }
+#ifndef DBG_NRF51822
+                     if (target_flash_erase_chip() == 0) {
+                         reason = SWD_ERROR;
+                         initDisconnect(0);
+                         return;
+                     }
+#endif
                 }
                 maybe_erase = 0;
                 program_page_error = 0;
