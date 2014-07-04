@@ -87,8 +87,8 @@
 #define BOARD_SECRET    "xxxxxxxx"
 
 #elif defined (BOARD_N4)
-#define BOARD_ID        "2014"
-#define BOARD_SECRET    "xxxxxxxx"
+#define BOARD_ID        "1090"
+#define BOARD_SECRET    "3d65913da"
 
 #endif
 

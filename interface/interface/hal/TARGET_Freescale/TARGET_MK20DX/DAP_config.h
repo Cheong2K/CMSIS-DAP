@@ -442,22 +442,22 @@ static __inline void DAP_SETUP (void) {
   PIN_SWDIO_NOE_GPIO->PSOR  = 1 << PIN_SWDIO_NOE_BIT;              /* High level */
   PIN_SWDIO_NOE_GPIO->PDDR |= 1 << PIN_SWDIO_NOE_BIT;              /* Output */
 
-#ifdef BOARD_N4
-  /* Configure I/O pin nRESET */
-    PIN_nRESET_PORT->PCR[PIN_nRESET_BIT] |= PORT_PCR_ISF_MASK;
-    //sw2 - interrupt on falling edge
-    PIN_nRESET_PORT->PCR[PIN_nRESET_BIT] = PORT_PCR_PS_MASK|PORT_PCR_PE_MASK|PORT_PCR_PFE_MASK|PORT_PCR_IRQC(10)|PORT_PCR_MUX(1);
-
-    PIN_nRESET_GPIO->PDDR &= ~(1<<PIN_nRESET_BIT);
-    
-    NVIC_ClearPendingIRQ(PORTB_IRQn);
-    NVIC_EnableIRQ(PORTB_IRQn);
-#else
   /* Configure I/O pin SWD_NOE */
   PIN_SWD_NOE_PORT->PCR[PIN_SWD_NOE_BIT]     = PORT_PCR_MUX(1);    /* GPIO */
   PIN_SWD_NOE_GPIO->PSOR  = 1 << PIN_SWD_NOE_BIT;                  /* High level */
   PIN_SWD_NOE_GPIO->PDDR |= 1 << PIN_SWD_NOE_BIT;                  /* Output */
 
+#ifdef BOARD_N4
+  /* Configure I/O pin nRESET */
+  PIN_nRESET_PORT->PCR[PIN_nRESET_BIT] |= PORT_PCR_ISF_MASK;
+  //sw2 - interrupt on falling edge
+  PIN_nRESET_PORT->PCR[PIN_nRESET_BIT] = PORT_PCR_PS_MASK|PORT_PCR_PE_MASK|PORT_PCR_PFE_MASK|PORT_PCR_IRQC(10)|PORT_PCR_MUX(1);
+
+  PIN_nRESET_GPIO->PDDR &= ~(1<<PIN_nRESET_BIT);
+    
+  NVIC_ClearPendingIRQ(PORTB_IRQn);
+  NVIC_EnableIRQ(PORTB_IRQn);
+#else
   /* Configure I/O pin nRESET */
   PIN_nRESET_PORT->PCR[PIN_nRESET_BIT]       = PORT_PCR_MUX(1)  |  /* GPIO */
                                                PORT_PCR_PE_MASK |  /* Pull enable */
