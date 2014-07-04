@@ -577,6 +577,8 @@ static void initDisconnect(uint8_t success) {
         
         enter_isp();
     }
+#elif defined(BOARD_N4)		
+    int autorst = 1;
 #else
     int autorst = 0;
 #endif

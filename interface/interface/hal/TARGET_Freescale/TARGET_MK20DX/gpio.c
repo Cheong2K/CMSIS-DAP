@@ -17,6 +17,7 @@
 #include <RTL.h>
 #include "DAP_config.h"
 #include "gpio.h"
+#include "swd_host.h"
 
 #if defined(INTERFACE_GEN_32KHZ) && defined(INTERFACE_POWER_EN)
 #error "Cannot use 32kHz clock gen and power enable simultaneously."
@@ -149,6 +150,10 @@ void gpio_enable_button_flag(OS_TID task, U16 flags)
     //sw2 - interrupt on falling edge
     PIN_nRESET_PORT->PCR[PIN_nRESET_BIT] = PORT_PCR_PS_MASK|PORT_PCR_PE_MASK|PORT_PCR_PFE_MASK|PORT_PCR_IRQC(10)|PORT_PCR_MUX(1);
 
+#ifdef BOARD_N4
+    PIN_nRESET_GPIO->PDDR &= ~(1<<PIN_nRESET_BIT);
+#endif
+	
     NVIC_ClearPendingIRQ(PORTB_IRQn);
     NVIC_EnableIRQ(PORTB_IRQn);
 }
@@ -158,10 +163,15 @@ void PORTB_IRQHandler(void)
     if (PIN_nRESET_PORT->ISFR == (1<<PIN_nRESET_BIT))
     {
         PIN_nRESET_PORT->PCR[PIN_nRESET_BIT] |= PORT_PCR_ISF_MASK;
+			
+#ifdef BOARD_N4
+				swd_set_target_state(RESET_RUN);      
+#else
         // Notify a task that the button has been pressed
         // disable interrupt
         PIN_nRESET_PORT->PCR[PIN_nRESET_BIT] = PORT_PCR_PS_MASK|PORT_PCR_PE_MASK|PORT_PCR_PFE_MASK|PORT_PCR_IRQC(00)|PORT_PCR_MUX(1); // IRQ Falling edge
-
+#endif 
+			
         //isr_evt_set(isr_flags, isr_notify);
     }
 }

@@ -195,10 +195,12 @@ static __inline void PORT_SWD_SETUP (void) {
     PTA->PCOR = PTA->PCOR | (1<<4);
     PTB->PCOR = PTB->PCOR | (1<<0);
 
+#ifndef BOARD_N4
+    PIN_nRESET_GPIO->PSOR = 1 << PIN_nRESET_BIT;
     PTB->PSOR = (1<<1);
     PTB->PDDR = PTB->PDDR | (1<<1); //output
-
-  PORTB->PCR[1] = PORT_PCR_PS_MASK|PORT_PCR_PE_MASK|PORT_PCR_PFE_MASK|PORT_PCR_IRQC(00)|PORT_PCR_MUX(1); /* IRQ Falling edge */    //disable interrupt
+    PORTB->PCR[1] = PORT_PCR_PS_MASK|PORT_PCR_PE_MASK|PORT_PCR_PFE_MASK|PORT_PCR_IRQC(00)|PORT_PCR_MUX(1); /* IRQ Falling edge */    //disable interrupt
+#endif
 }
 
 /** Disable JTAG/SWD I/O Pins.
@@ -440,6 +442,17 @@ static __inline void DAP_SETUP (void) {
   PIN_SWDIO_NOE_GPIO->PSOR  = 1 << PIN_SWDIO_NOE_BIT;              /* High level */
   PIN_SWDIO_NOE_GPIO->PDDR |= 1 << PIN_SWDIO_NOE_BIT;              /* Output */
 
+#ifdef BOARD_N4
+  /* Configure I/O pin nRESET */
+    PIN_nRESET_PORT->PCR[PIN_nRESET_BIT] |= PORT_PCR_ISF_MASK;
+    //sw2 - interrupt on falling edge
+    PIN_nRESET_PORT->PCR[PIN_nRESET_BIT] = PORT_PCR_PS_MASK|PORT_PCR_PE_MASK|PORT_PCR_PFE_MASK|PORT_PCR_IRQC(10)|PORT_PCR_MUX(1);
+
+    PIN_nRESET_GPIO->PDDR &= ~(1<<PIN_nRESET_BIT);
+    
+    NVIC_ClearPendingIRQ(PORTB_IRQn);
+    NVIC_EnableIRQ(PORTB_IRQn);
+#else
   /* Configure I/O pin SWD_NOE */
   PIN_SWD_NOE_PORT->PCR[PIN_SWD_NOE_BIT]     = PORT_PCR_MUX(1);    /* GPIO */
   PIN_SWD_NOE_GPIO->PSOR  = 1 << PIN_SWD_NOE_BIT;                  /* High level */
@@ -452,6 +465,7 @@ static __inline void DAP_SETUP (void) {
                                                PORT_PCR_ODE_MASK;  /* Open-drain */
   PIN_nRESET_GPIO->PSOR  = 1 << PIN_nRESET_BIT;                    /* High level */
   PIN_nRESET_GPIO->PDDR |= 1 << PIN_nRESET_BIT;                    /* Output */
+#endif
 
   /* Configure LED */
   LED_CONNECTED_PORT->PCR[LED_CONNECTED_BIT] = PORT_PCR_MUX(1)  |  /* GPIO */
