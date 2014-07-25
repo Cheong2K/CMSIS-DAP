@@ -21,6 +21,9 @@
 #include "serial.h"
 #include "uart.h"
 
+#if defined(BOARD_N4)
+#include "swd_host.h"
+#endif
 
 UART_Configuration UART_Config;
 
@@ -80,6 +83,14 @@ int32_t USBD_CDC_ACM_PortSetLineCoding (CDC_LINE_CODING *line_coding) {
     UART_Config.StopBits    = (UART_StopBits) line_coding->bCharFormat;
     UART_Config.FlowControl = UART_FLOW_CONTROL_NONE;
 
+#if defined(BOARD_N4)	
+	  //When Opening Com Port at 1200bps, Send a RESET Target Command
+    if(UART_Config.Baudrate == 1200)
+    {
+        swd_set_target_state(RESET_RUN);
+    }
+#endif
+		
     return (serial_set_configuration (&UART_Config));
 }
 
